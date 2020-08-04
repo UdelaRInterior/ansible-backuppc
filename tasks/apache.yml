@@ -10,7 +10,7 @@
   - ssl
   loop_control:
     loop_var: module
-    
+
 - name: TEMPLATE | Copy apache config
   template:
     dest: "/etc/apache2/sites-available/{{ backuppc_srv_server_name }}.conf"

@@ -2,13 +2,13 @@
 # backuppc_server role's handlers
 
 - name: BackupPC_server - restart backuppc
-  service: 
+  service:
     name: backuppc
     state: restarted
     enabled: yes
 
 - name: BackupPC_server - restart apache2
-  service: 
+  service:
     name: apache2
     state: restarted
     enabled: yes

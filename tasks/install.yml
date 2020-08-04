@@ -2,7 +2,7 @@
 ## backuppc server installation tasks
 
 - name: APT | Install BackupPC and few related tools
-  apt: 
+  apt:
     pkg: '{{ backuppc_srv_packages }}'
     state: present
     update_cache: yes
@@ -30,11 +30,11 @@
 - name: TEMPLATE | Global BackupPC configuration
   template:
     src: etc/backuppc/config.pl.j2
-    dest: '{{ backuppc_srv_config_dir }}/config.pl'   
+    dest: '{{ backuppc_srv_config_dir }}/config.pl'
     owner: '{{ backuppc_srv_unix_user }}'
     group: '{{ backuppc_srv_unix_group }}'
     mode: 0640
-  notify: 
+  notify:
   - BackupPC_server - restart backuppc
   - BackupPC_server - restart apache2
 ...
