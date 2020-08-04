@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Include backuppc_server"
+      include_role:
+        name: "backuppc_server"
