@@ -1,60 +1,40 @@
 ---
-## backuppc installation
-
-- name: Create symbolic link 
-  file:
-    src: "{{ backuppc_home_link }}"
-    dest: "{{ backuppc_server_home }}"
-    mode: 0755
-    state: link
-  when: backuppc_home_link is defined
-  tags: symbolic
+## backuppc server installation tasks
 
 - name: APT | Install BackupPC and few related tools
   apt: 
-    pkg: '{{ packages }}'
+    pkg: '{{ backuppc_srv_packages }}'
     state: present
     update_cache: yes
     cache_valid_time: 3600
-  vars:
-    packages:
-    - backuppc
-    - fcgiwrap
-    - libfile-rsyncp-perl
-    - ohai
-    - python-passlib
-  register: install
+  register: backuppc_srv_install
 
 - name: SETUP | with ohai
   action: setup
-  when: install.changed
+  when: backuppc_srv_install.changed
 
-- name: create web backuppc users
-  htpasswd:
-    path: /etc/backuppc/htpasswd
-    name: "{{ item.name }}"
-    password: "{{ item.password }}"
-    owner: root
-    group: www-data
-    mode: 0640
-  with_items: "{{ users_backuppc }}"
-  tags: create_users_backuppc
+- name: INCLUDE | Configure htpasswd users
+  include_tasks: htpasswd_users.yml
+  loop: "{{ backuppc_srv_web_users }}"
+  loop_control:
+    loop_var: backuppc_srv_web_user
+  tags: backuppc_srv_config_users
 
 - name: USER | Create SSH key for backuppc user
   user:
-    name: backuppc
+    name: '{{ backuppc_srv_unix_user }}'
     generate_ssh_key: yes
-    ssh_key_bits: "{{ backuppc_ssh_key_bits | default (omit) }}"
-    ssh_key_comment: "backuppc@{{ inventory_hostname }}"
+    ssh_key_bits: "{{ backuppc_srv_user_ssh_key_bits | default (omit) }}"
+    ssh_key_comment: "{{ backuppc_srv_unix_user }}@{{ inventory_hostname }}"
 
 - name: TEMPLATE | Global BackupPC configuration
   template:
     src: etc/backuppc/config.pl.j2
-    dest: '/etc/backuppc/config.pl'   
-    owner: backuppc
-    group: www-data
+    dest: '{{ backuppc_srv_config_dir }}/config.pl'   
+    owner: '{{ backuppc_srv_unix_user }}'
+    group: '{{ backuppc_srv_unix_group }}'
     mode: 0640
   notify: 
-  - restart backuppc
-  - restart apache2
+  - BackupPC_server - restart backuppc
+  - BackupPC_server - restart apache2
 ...

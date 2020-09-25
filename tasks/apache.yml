@@ -1,31 +1,63 @@
 ---
+# backuppc_server tasks to configure Apache2 for BackupPC access
 
-- name: Add module
+- name: APACHE2_MODULE | Add module
   apache2_module:
+    name: "{{ module }}"
     state: present
-    name: "{{item}}"
-  with_items: 
-    - rewrite
-    - ssl
+  loop:
+  - rewrite
+  - ssl
+  loop_control:
+    loop_var: module
     
-- name: Copy apache config
+- name: TEMPLATE | Copy apache config
   template:
-    dest: "/etc/apache2/sites-available/{{ backuppc_server_name }}.conf"
+    dest: "/etc/apache2/sites-available/{{ backuppc_srv_server_name }}.conf"
     src: etc/apache/apache.conf.j2
     owner: root
     group: root
     mode: "0644"
-  notify: restart apache2
+    backup: yes
+  notify: BackupPC_server - restart apache2
 
-- name: Remove default apache2 site.
+- name: FILE | Remove default apache2 site.
   file:
     path: /etc/apache2/sites-enabled/000-default.conf
     state: absent
-  notify: restart apache2
+  notify: BackupPC_server - restart apache2
+  when: backuppc_srv_disable_apache_default_site | bool
 
-- name: Activate custom Backuppc apache site.
+- name: FILE | Activate custom Backuppc apache site.
   file:
-    path: "/etc/apache2/sites-enabled/{{ backuppc_server_name }}.conf"
-    src: "/etc/apache2/sites-available/{{ backuppc_server_name }}.conf"
+    path: "/etc/apache2/sites-enabled/{{ backuppc_srv_server_name }}.conf"
+    src: "/etc/apache2/sites-available/{{ backuppc_srv_server_name }}.conf"
     state: link
-  notify: restart apache2
+  notify: BackupPC_server - restart apache2
+
+- name: LINEINFILE | Require SSL to access to Apache2 BackupPC interface
+  lineinfile:
+    path: '{{ backuppc_srv_config_dir }}/apache.conf'
+    backrefs: yes
+    regexp: '^(\s*)#?SSLRequireSSL$'
+    line: '\1SSLRequireSSL'
+    backup: yes
+    state: present
+  notify: BackupPC_server - restart apache2
+  when: backuppc_srv_apache_require_ssl | bool
+
+- name: LINEINFILE | Configure distant access to Apache2 BackupPC interface
+  lineinfile:
+    path: '{{ backuppc_srv_config_dir }}/apache.conf'
+    backrefs: yes
+    regexp: '(\s*)(# |)Require (ip|local)'
+
+    line: "\\1{{ '# ' if not backuppc_srv_apache_access_control }}Require {{ backuppc_srv_apache_Require if backuppc_srv_apache_Require is defined else 'local' }}"
+    backup: yes
+    state: present
+  notify: BackupPC_server - restart apache2
+  when:
+  - ansible_facts['distribution'] == "Debian"
+  - ansible_facts['distribution_major_version'] | int >= 10
+
+...

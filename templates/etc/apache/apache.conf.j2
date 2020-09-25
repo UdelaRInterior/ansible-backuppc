@@ -6,12 +6,15 @@
 
 <VirtualHost *:443>
 
-    SSLEngine on
-    SSLCertificateFile /etc/letsencrypt/live/{{backuppc_server_name}}/cert.pem
-    SSLCertificateKeyFile /etc/letsencrypt/live/{{backuppc_server_name}}/privkey.pem
+    RewriteEngine On
+    RedirectMatch ^/$ /backuppc/
+    # /backuppc alias is configured in /etc/backuppc/apache.conf
 
-    ServerAdmin webmaster@localhost
-    # DocumentRoot /usr/share/backuppc/cgi-bin/
+    SSLEngine on
+    SSLCertificateFile {{ backuppc_srv_apache_ssl_cert_file }}
+    SSLCertificateKeyFile {{ backuppc_srv_apache_ssl_cert_key_file }}
+
+    ServerAdmin {{ backuppc_srv_apache_email }}
 
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined

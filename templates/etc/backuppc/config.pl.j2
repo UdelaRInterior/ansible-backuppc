@@ -48,7 +48,7 @@
 #
 $ENV{'PATH'} = '/bin:/usr/bin';
 delete @ENV{'IFS', 'CDPATH', 'ENV', 'BASH_ENV'};
-$Conf{ServerHost} = '{{ backuppc_server_name }}';
+$Conf{ServerHost} = '{{ backuppc_srv_ServerHost }}';
 chomp($Conf{ServerHost});
 
 #
@@ -59,7 +59,7 @@ chomp($Conf{ServerHost});
 # If you enable the TCP port, make sure you set $Conf{ServerMesgSecret}
 # too!
 #
-$Conf{ServerPort} = {{ backuppc_ServerPort }};
+$Conf{ServerPort} = {{ backuppc_srv_ServerPort }};
 
 #
 # Shared secret to make the TCP port secure.  Set this to a hard to guess
@@ -80,7 +80,7 @@ $Conf{ServerPort} = {{ backuppc_ServerPort }};
 # not possible since the seed changes on a per-connection and
 # per-message basis.
 #
-$Conf{ServerMesgSecret} = '{{ backuppc_ServerMesgSecret }}';
+$Conf{ServerMesgSecret} = '{{ backuppc_srv_ServerMesgSecret }}';
 
 #
 # PATH setting for BackupPC.  An explicit value is necessary
@@ -152,14 +152,14 @@ $Conf{WakeupSchedule} = [
 # are no user backup requests then this is the maximum number
 # of simultaneous backups.
 #
-$Conf{MaxBackups} = {{ backuppc_MaxBackups }};
+$Conf{MaxBackups} = {{ backuppc_srv_MaxBackups }};
 
 #
 # Additional number of simultaneous backups that users can run.
 # As many as $Conf{MaxBackups} + $Conf{MaxUserBackups} requests can
 # run at the same time.
 #
-$Conf{MaxUserBackups} = {{ backuppc_MaxUserBackups }};
+$Conf{MaxUserBackups} = {{ backuppc_srv_MaxUserBackups }};
 
 #
 # Maximum number of pending link commands. New backups will only be
@@ -190,7 +190,7 @@ $Conf{CmdQueueNice} = 10;
 # setting to run several BackupPC_nightly processes in parallel
 # (eg: 4, or even 8).
 #
-$Conf{MaxBackupPCNightlyJobs} = {{ backuppc_MaxBackupPCNightlyJobs }};
+$Conf{MaxBackupPCNightlyJobs} = {{ backuppc_srv_MaxBackupPCNightlyJobs }};
 
 #
 # How many days (runs) it takes BackupPC_nightly to traverse the
@@ -219,7 +219,7 @@ $Conf{MaxBackupPCNightlyJobs} = {{ backuppc_MaxBackupPCNightlyJobs }};
 #    $Conf{BackupPCNightlyPeriod} = 4;   # four days to complete pool check
 #                                        # (different quarter each night)
 #
-$Conf{BackupPCNightlyPeriod} = 1;
+$Conf{BackupPCNightlyPeriod} = {{ backuppc_srv_BackupPCNightlyPeriod }};
 
 #
 # Maximum number of log files we keep around in log directory.
@@ -232,7 +232,7 @@ $Conf{BackupPCNightlyPeriod} = 1;
 # If you decrease this number after BackupPC has been running for a
 # while you will have to manually remove the older log files.
 #
-$Conf{MaxOldLogFiles} = {{ backuppc_MaxOldLogFiles }};
+$Conf{MaxOldLogFiles} = {{ backuppc_srv_MaxOldLogFiles }};
 
 #
 # Full path to the df command.  Security caution: normal users
@@ -270,13 +270,13 @@ $Conf{Bzip2Path} = '/bin/bzip2';
 # Also, currently running backups will not be terminated when the disk
 # usage exceeds this number.
 #
-$Conf{DfMaxUsagePct} = 95;
+$Conf{DfMaxUsagePct} = {{ backuppc_srv_DfMaxUsagePct }};
 
 #
 # How long BackupPC_trashClean sleeps in seconds between each check
 # of the trash directory.  Once every 5 minutes should be reasonable.
 #
-$Conf{TrashCleanSleepSec} = 300;
+$Conf{TrashCleanSleepSec} = {{ backuppc_srv_TrashCleanSleepSec }};
 
 #
 # List of DHCP address ranges we search looking for PCs to backup.
@@ -312,7 +312,7 @@ $Conf{DHCPAddressRanges} = [];
 #
 # The BackupPC user.
 #
-$Conf{BackupPCUser} = 'backuppc';
+$Conf{BackupPCUser} = '{{ backuppc_srv_unix_user }}';
 
 #
 # Important installation directories:
@@ -334,11 +334,11 @@ $Conf{BackupPCUser} = 'backuppc';
 # a symbolic link to the new location, or mount the new BackupPC
 # store at the existing $Conf{TopDir} setting.
 #
-$Conf{TopDir} = '/var/lib/backuppc';
-$Conf{ConfDir} = '/etc/backuppc';
-$Conf{LogDir} = '/var/lib/backuppc/log';
-$Conf{InstallDir} = '/usr/share/backuppc';
-$Conf{CgiDir} = '/usr/share/backuppc/cgi-bin';
+$Conf{TopDir} = '{{ backuppc_srv_user_home }}';
+$Conf{ConfDir} = '{{ backuppc_srv_config_dir }}';
+$Conf{LogDir} = '{{ backuppc_srv_LogDir }}';
+$Conf{InstallDir} = '{{ backuppc_srv_InstallDir }}';
+$Conf{CgiDir} = '{{ backuppc_srv_CgiDir }}';
 
 #
 # Whether BackupPC and the CGI script BackupPC_Admin verify that they
@@ -392,7 +392,7 @@ $Conf{ServerInitdStartCmd} = '';
 
 
 ###########################################################################
-# What to backup and when to do it
+# 
 # (can be overridden in the per-PC config.pl)
 ###########################################################################
 #
@@ -405,7 +405,7 @@ $Conf{ServerInitdStartCmd} = '';
 # time taken for the backup, plus the granularity of $Conf{WakeupSchedule}
 # will make the actual backup interval a bit longer.
 #
-$Conf{FullPeriod} = '{{ backuppc_FullPeriod }}';
+$Conf{FullPeriod} = '{{ backuppc_srv_FullPeriod }}';
 
 #
 # Minimum period in days between incremental backups (a user requested
@@ -415,7 +415,7 @@ $Conf{FullPeriod} = '{{ backuppc_FullPeriod }}';
 # time taken for the backup, plus the granularity of $Conf{WakeupSchedule}
 # will make the actual backup interval a bit longer.
 #
-$Conf{IncrPeriod} = '{{ backuppc_IncrPeriod }}';
+$Conf{IncrPeriod} = '{{ backuppc_srv_IncrPeriod }}';
 
 #
 # Number of full backups to keep.  Must be >= 1.
@@ -491,7 +491,7 @@ $Conf{IncrPeriod} = '{{ backuppc_IncrPeriod }}';
 #    $Conf{FullKeepCnt} = [4];
 #
 $Conf{FullKeepCnt} = [
-  {{ backuppc_FullKeepCnt }}
+  {{ backuppc_srv_FullKeepCnt }}
 ];
 
 #
@@ -622,7 +622,7 @@ $Conf{IncrLevels} = [
 # In versions prior to 3.0 Backups were disabled by setting
 # $Conf{FullPeriod} to -1 or -2.
 #
-$Conf{BackupsDisable} = 0;
+$Conf{BackupsDisable} = {{ backuppc_srv_BackupsDisable }};
 
 #
 # A failed full backup is saved as a partial backup.  The rsync
@@ -719,18 +719,39 @@ $Conf{ArchiveInfoKeepCnt} = 10;
 #       '*' => ['/myFiles', '/important'],      # these are other shares
 #    };
 #
-{% if backuppc_BackupFilesOnly is defined %}
-$Conf{BackupFilesOnly} = {
-  '*' => [
-{% for item in backuppc_BackupFilesOnly %}
-    '{{ item }}'{% if not loop.last %},{% endif %}
 
+$Conf{BackupFilesOnly} = 
+{%- if backuppc_srv_BackupFilesOnly is defined %}
+{% if backuppc_srv_BackupFilesOnly is string %}
+ "{{ backuppc_srv_BackupFilesOnly }}";
+{%- elif backuppc_srv_BackupFilesOnly is mapping %} {
+{%- for Share, BackupFiles in backuppc_srv_BackupFilesOnly.items() %}
+
+  '{{ Share }}' =>
+{%- if BackupFiles is string %} {{ BackupFiles }}
+{%- else %} [
+{%- for BackupFile in BackupFiles %}
+
+      '{{ BackupFile }}'{% if not loop.last %},{% endif %}
 {% endfor %}
-  ]
+
+    ]
+{%- endif %}{% if not loop.last %},{% endif %}
+{% endfor %}
+
 };
-{% elif backuppc_BackupFilesOnly is not defined %}
-$Conf{BackupFilesOnly} = {};
-{% endif %}
+{%- else %} [
+{%- for backup_files in backuppc_srv_BackupFilesOnly %}
+
+  '{{ backup_files }}'{% if not loop.last %},{% endif %}
+{% endfor %}
+
+];
+{%- endif %}
+{%- else %}
+ {};
+{%- endif %}
+
 
 #
 # List of directories or files to exclude from the backup.  For Smb,
@@ -786,18 +807,39 @@ $Conf{BackupFilesOnly} = {};
 #       '*' => ['/junk', '/dont_back_this_up'], # these are for other shares
 #    };
 #
-{% if backuppc_BackupFilesExclude is defined %}
-$Conf{BackupFilesExclude} = {
-  '*' => [
-{% for item in backuppc_BackupFilesExclude %}
-    '{{ item }}'{% if not loop.last %},{% endif %}
 
+$Conf{BackupFilesExclude} = 
+{%- if backuppc_srv_BackupFilesExclude is defined %}
+{% if backuppc_srv_BackupFilesExclude is string %}
+ "{{ backuppc_srv_BackupFilesExclude }}";
+{%- elif backuppc_srv_BackupFilesExclude is mapping %} {
+{%- for Share, BackupFilesExclude in backuppc_srv_BackupFilesExclude.items() %}
+
+  '{{ Share }}' =>
+{%- if BackupFilesExclude is string %} {{ BackupFilesExclude }}
+{%- else %} [
+{%- for FileExclude in BackupFilesExclude %}
+
+      '{{ FileExclude }}'{% if not loop.last %},{% endif %}
 {% endfor %}
-  ]
+
+    ]
+{%- endif %}{% if not loop.last %},{% endif %}
+{% endfor %}
+
 };
-{% elif backuppc_BackupFilesExclude is not defined %}
-$Conf{BackupFilesExclude} = {};
-{% endif %}
+{%- else %} [
+{%- for FilesExclude in backuppc_srv_BackupFilesExclude %}
+
+  '{{ FilesExclude }}'{% if not loop.last %},{% endif %}
+{% endfor %}
+
+];
+{%- endif %}
+{%- else %}
+ {};
+{%- endif %}
+
 
 #
 # PCs that are always or often on the network can be backed up after
@@ -921,14 +963,14 @@ $Conf{BackupZeroFilesIsFatal} = '1';
 #                to permanent media, such as tape, CDR or DVD.
 #               
 #
-$Conf{XferMethod} = 'smb';
+$Conf{XferMethod} = '{{ backuppc_srv_XferMethod }}';
 
 #
 # Level of verbosity in Xfer log files.  0 means be quiet, 1 will give
 # will give one line per file, 2 will also show skipped files on
 # incrementals, higher values give more output.
 #
-$Conf{XferLogLevel} = {{ backuppc_XferLogLevel }};
+$Conf{XferLogLevel} = {{ backuppc_srv_XferLogLevel }};
 
 #
 # Filename charset encoding on the client.  BackupPC uses utf8
@@ -1243,7 +1285,7 @@ $Conf{RsyncClientPath} = '/usr/bin/rsync';
 #
 # This setting only matters if $Conf{XferMethod} = 'rsync'.
 #
-$Conf{RsyncClientCmd} = '{{ backuppc_RsyncClientCmd }}';
+$Conf{RsyncClientCmd} = '{{ backuppc_srv_RsyncClientCmd }}';
 
 #
 # Full command to run rsync for restore on the client.  The following
@@ -1264,7 +1306,7 @@ $Conf{RsyncClientCmd} = '{{ backuppc_RsyncClientCmd }}';
 # needs to be a full path and you can't include shell syntax like
 # redirection and pipes; put that in a script if you need it.
 #
-$Conf{RsyncClientRestoreCmd} = '{{ backuppc_RsyncClientRestoreCmd }}';
+$Conf{RsyncClientRestoreCmd} = '{{ backuppc_srv_RsyncClientRestoreCmd }}';
 
 #
 # Share name to backup.  For $Conf{XferMethod} = "rsync" this should
@@ -1281,8 +1323,17 @@ $Conf{RsyncClientRestoreCmd} = '{{ backuppc_RsyncClientRestoreCmd }}';
 #
 #     $Conf{RsyncShareName} = ['/', '/var', '/data', '/boot'];
 #
+{# backuppc_srv_RsyncShareName is a list of folders (linux, rsync method) #}
 $Conf{RsyncShareName} = [
+{%- if backuppc_srv_RsyncShareName is defined and backuppc_srv_RsyncShareName | length > 0 %}
+{%- for share in backuppc_srv_RsyncShareName %}
+
+  '{{ share }}'{% if not loop.last %},{% endif %}
+{% endfor %}
+
+{% else %}
   '/'
+{% endif %}
 ];
 
 #
@@ -1672,6 +1723,9 @@ $Conf{FixedIPNetBiosNameCheck} = '0';
 #     $Conf{PingPath} = '/bin/echo';
 #
 $Conf{PingPath} = '/bin/ping';
+{% if ansible_facts['all_ipv6_addresses'] | length > 0 %}
+$Conf{Ping6Path} = '/bin/ping6';
+{% endif %}
 
 #
 # Ping command.  The following variables are substituted at run-time:
@@ -1698,7 +1752,7 @@ $Conf{PingCmd} = '$pingPath -c 1 $host';
 # WAN or dialup connections the round-trip time will be typically more
 # than 20msec.  Tune if necessary.
 #
-$Conf{PingMaxMsec} = {{ backuppc_PingMaxMsec }};
+$Conf{PingMaxMsec} = {{ backuppc_srv_PingMaxMsec }};
 
 #
 # Compression level to use on files.  0 means no compression.  Compression
@@ -1912,7 +1966,7 @@ $Conf{EMailNotifyMinDays} = '2.5';
 # handler this is either a plain name (eg: "admin") or a fully-qualified
 # name (eg: "admin@mydomain.com").
 #
-$Conf{EMailFromUserName} = 'backuppc';
+$Conf{EMailFromUserName} = '{{ backuppc_srv_EMailFromUserName }}';
 
 #
 # Destination address to an administrative user who will receive a
@@ -1921,7 +1975,7 @@ $Conf{EMailFromUserName} = 'backuppc';
 # handler this is either a plain name (eg: "admin") or a fully-qualified
 # name (eg: "admin@mydomain.com").
 #
-$Conf{EMailAdminUserName} = 'backuppc';
+$Conf{EMailAdminUserName} = '{{ backuppc_srv_EMailAdminUserName }}';
 
 #
 # Destination domain name for email sent to users.  By default
@@ -1932,7 +1986,7 @@ $Conf{EMailAdminUserName} = 'backuppc';
 #
 # With this setting user email will be set to 'user@mydomain.com'.
 #
-$Conf{EMailUserDestDomain} = '';
+$Conf{EMailUserDestDomain} = '{{ backuppc_srv_EMailUserDestDomain }}';
 
 #
 # This subject and message is sent to a user if their PC has never been
@@ -2049,13 +2103,13 @@ Content-Type: text/plain; charset="utf-8"
 #    $Conf{CgiAdminUsers}     = 'craig celia';
 #    --> administrative users are only craig and celia'.
 #
-$Conf{CgiAdminUserGroup} = 'backuppc';
-$Conf{CgiAdminUsers} = 'backuppc';
+$Conf{CgiAdminUserGroup} = '{{ backuppc_srv_CgiAdminUserGroup }}';
+$Conf{CgiAdminUsers} = '{{ backuppc_srv_CgiAdminUsers }}';
 
 #
 # URL of the BackupPC_Admin CGI script.  Used for email messages.
 #
-$Conf{CgiURL} = 'http://jessie-amd64/backuppc/index.cgi';
+$Conf{CgiURL} = '{{ backuppc_srv_CgiURL }}';
 
 #   
 # Language to use.  See lib/BackupPC/Lang for the list of supported
@@ -2066,7 +2120,7 @@ $Conf{CgiURL} = 'http://jessie-amd64/backuppc/index.cgi';
 # Currently the Language setting applies to the CGI interface and email
 # messages sent to users.  Log files and other text are still in English.
 #
-$Conf{Language} = '{{backuppc_language}}';
+$Conf{Language} = '{{ backuppc_srv_language }}';
 
 #
 # User names that are rendered by the CGI interface can be turned
@@ -2097,7 +2151,7 @@ $Conf{CgiUserUrlCreate} = 'mailto:%s';
 # dates (MM/DD), a value of 2 uses full YYYY-MM-DD format, and zero
 # for international dates (DD/MM).
 #
-$Conf{CgiDateFormatMMDD} = '{{backuppc_Date_Format}}';
+$Conf{CgiDateFormatMMDD} = '{{ backuppc_srv_CgiDateFormatMMDD }}';
 
 #
 # If set, the complete list of hosts appears in the left navigation

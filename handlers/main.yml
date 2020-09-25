@@ -1,11 +1,16 @@
 ---
+# backuppc_server role's handlers
 
-- name: restart backuppc
-  action: service name=backuppc state=restarted enabled=yes
-  delegate_to: "{{backuppc_server_name}}"
+- name: BackupPC_server - restart backuppc
+  service: 
+    name: backuppc
+    state: restarted
+    enabled: yes
 
-- name: restart apache2
-  action: service name=apache2 state=restarted enabled=yes
-  delegate_to: "{{backuppc_server_name}}"
+- name: BackupPC_server - restart apache2
+  service: 
+    name: apache2
+    state: restarted
+    enabled: yes
 
-
+...

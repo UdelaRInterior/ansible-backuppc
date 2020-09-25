@@ -1,54 +1,191 @@
 ---
+# Defaults' variables of role backuppc_server, with default values
 
-backuppc_server_name: "{{ ansible_hostname }}"
-backuppc_fetch_ssh_key: false
-# backuppc_local_fetch_dir: "/var/lib/backuppc"  # Only for client
+# backuppc_server role variables' namespace is now: `backuppc_srv_*`
+# in order to avoid interfering with backuppc_client role, which namespace is `backuppc_*`
+# This is needed particularly to configure the backup of the BackupPC server itself
 
-backuppc_server_home: /var/lib/backuppc
+# FQDN of the BackupPC server we are installing
+backuppc_srv_server_name: '{{ inventory_hostname }}'
 
-## If backuppc_home_link is defined a symbolic link is defined from backuppc_server_home to backuppc_home_link
-# backuppc_home_link:   # By default this variable is not defined
+### Package variables
 
-backuppc_hosts: []
-backuppc_pre_dump: ''
-backuppc_post_dump: ''
-hostname: []
-hostname_dump: []
+## BackupPC package parameters (most don't need to be changed)
+# BackupPC unix user in the server, from which are launched ssh backups to the client.
+backuppc_srv_unix_user: backuppc
+# BackupPC group in the server
+backuppc_srv_unix_group: www-data
+# Home dir of `backuppc_srv_unix_user` unix user
+backuppc_srv_user_home: /var/lib/backuppc
+# Number of bits of the ssh key generated for `backuppc_srv_unix_user`
+backuppc_srv_user_ssh_key_bits: 2048
+# BackupPC configuration directory
+backuppc_srv_config_dir: /etc/backuppc
 
-include_files:
-  - /etc
-  - /var/lib
-  - /home
-  - /root
+### BackupPC configuration variables
+# Configurable parameters in config.pl backuppc file.
+# Ansible variables are similar to perl BackupPC variables, with the backuppc_srv_ prefix
+## See file templates/etc/backuppc/config.pl.j2 for variables' role explanations and possible values 
+# The role's variables are named with the namespace prefix `backuppc_srv_` followed by the BackupPC 
+# `config.pl` file parameter name. Note that half of the name is in snake_case and half in CamelCase. 
 
-# debe ir en las host_vars y le indica quienes tiene acceso por backuppc al contenedor
-backup_local_users: 'backuppc'
+# Host name on which the BackupPC server is running
+# We just define this variables for naming coherence, no specific need to define a new one.  
+backuppc_srv_ServerHost: '{{ backuppc_srv_server_name }}'
 
-# se carga el grupo al que pertenece el servidor de respaldos
-backuppc_group: '{{ groups.backuppc }}'
+#### General server configuration
 
+#### What to backup and when to do it
+
+# Default list of system folders to backup from a client
+backuppc_srv_RsyncShareName: 
+- /etc    
+- /var
+- /home
+- /root
+## backuppc_srv_RsyncShareName must be a list of folders (rsync method, presently the only tested)
+## See file templates/etc/backuppc/config.pl.j2, lines 1289 to 1312 
+
+# Default list of files, eventually per share, to include in the backup of a client
+# List of directories or files to include in backups. This can be set to a string, a list of strings,
+# or, in the case of multiple shares, a dict of strings or lists. A dict is used to give a list of directories 
+# or files to backup for each share (the share name is the key). If a hash is used, a special key `"*"` means 
+#it applies to all shares that don't have a specific entry.
 #
-# Global configuration
-# Configurable parameters in config.pl backuppc file
+# backuppc_srv_BackupFilesOnly: 
 #
-backuppc_ServerPort: -1
-backuppc_ServerMesgSecret: ''
-backuppc_MaxBackups: 4
-backuppc_MaxUserBackups: 4
-backuppc_MaxBackupPCNightlyJobs: 2
-backuppc_BackupPCNightlyPeriod: 1
-backuppc_MaxOldLogFiles: 14
-backuppc_FullPeriod: 6.97
-backuppc_IncrPeriod: 0.97
-backuppc_FullKeepCnt: 1
-# backuppc_FullKeepCnt: [4, 0, 4, 0, 0, 2]  ## 8 month history
-backuppc_PingMaxMsec: 200
-backuppc_XferLogLevel: 1
-backuppc_language: 'en'
-users_backuppc: # usuarios habilitados para utilizar backuppc
-  - name: backuppc
-    password: 'backuppc'
+# See README.md for more explenations and example
 
-# Rsync
-backuppc_RsyncClientCmd: '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
-backuppc_RsyncClientRestoreCmd: '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
+# List of directories or files to exclude from the backup: 
+# backuppc_srv_BackupFilesExclude: 
+#
+# Syntax is similar than backuppc_srv_BackupFilesOnly
+
+## Global configuration
+#
+# Not userd with Apache 2, only for direct TCP acces
+backuppc_srv_ServerPort: -1
+backuppc_srv_ServerMesgSecret: ''
+# Maximum automatic simultaneous backups
+backuppc_srv_MaxBackups: 4
+# Maximum user requested simultaneous backups
+backuppc_srv_MaxUserBackups: 4
+# Maximum nithly simultaneous jobs
+backuppc_srv_MaxBackupPCNightlyJobs: 2
+# Days to traverse the entire pool
+backuppc_srv_BackupPCNightlyPeriod: 1
+# Max number of old logs files
+backuppc_srv_MaxOldLogFiles: 14
+# Maximum filling of disk (percentage)
+backuppc_srv_DfMaxUsagePct: 95
+# Sleep tiem parameter
+backuppc_srv_TrashCleanSleepSec: 300
+# Several directories needed
+backuppc_srv_LogDir: /var/lib/backuppc/log
+backuppc_srv_InstallDir: /usr/share/backuppc
+backuppc_srv_CgiDir: /usr/share/backuppc/cgi-bin
+
+#### What to backup and when to do it
+## Following parameters can be overwritten in the per client config.pl
+## See backuppc_client role: https://github.com/UdelaRInterior/ansible-backuppc-client/blob/master/README.md
+
+# Default full period and incemental perior (1 week, 1 day)
+backuppc_srv_FullPeriod: 6.97
+backuppc_srv_IncrPeriod: 0.97
+# See config.pl.j2 line 421 to 495
+# backuppc_srv_FullKeepCnt must be set as a value or the elements of a list of exponential values. Ex: 4, 0, 4, 0, 0, 2  ## 8 month history
+backuppc_srv_FullKeepCnt: 1
+
+# State of the backup
+backuppc_srv_BackupsDisable: 0
+# Other possible values are 1: automatic backup disable, manual backup ok, 2: no backup at all 
+
+# Rsync default commands to backup and restore a host
+backuppc_srv_RsyncClientCmd: '$sshPath -x -q -l {{ backuppc_srv_unix_user }} $host sudo $rsyncPath $argList+'
+backuppc_srv_RsyncClientRestoreCmd: '$sshPath -q -x -l {{ backuppc_srv_unix_user }} $host sudo $rsyncPath $argList+'
+
+backuppc_srv_PingMaxMsec: 200
+# Transer Method for backups. Possible values: smb, rsync, rsyncd, tar, archive. Only rsync is tested in the role
+backuppc_srv_XferMethod: rsync
+backuppc_srv_XferLogLevel: 1
+
+# Name to use as the "from" name for email
+backuppc_srv_EMailFromUserName: '{{ backuppc_srv_unix_user }}'
+# Destination address to an administrative user who will receive a
+# nightly email with warnings and errors
+backuppc_srv_EMailAdminUserName: '{{ backuppc_srv_unix_user }}'
+# Destination domain name for email sent to users
+backuppc_srv_EMailUserDestDomain: ''
+
+#### CGI user interface configuration settings
+
+# Linux group of admin users through the CGI
+backuppc_srv_CgiAdminUserGroup: '{{ backuppc_srv_unix_user }}'
+# List of users who are also admin users through the CGI
+backuppc_srv_CgiAdminUsers: '{{ backuppc_srv_unix_user }}'
+
+# URL of the BackupPC_Admin CGI script.  Used for email messages.
+backuppc_srv_CgiURL: 'https://{{ backuppc_srv_server_name }}/backuppc/index.cgi'
+
+# BackupPC web interface language
+backuppc_srv_language: 'en'
+# Date display format for CGI interface 
+backuppc_srv_CgiDateFormatMMDD: 0 # International format
+
+## BackupPC web users configuration / htpasswd user entries
+backuppc_srv_web_users: []
+## List of web user accounts data for BackupPC 
+#
+# backuppc_srv_web_users:
+# - name: user1
+#   password: '{{ vault_secret }}'
+#   mail: user1@domain.org
+# - name: user2
+#   htpasswd_hash: 'user2:$apr1$70okuQfp$/PB1pKZ0YXi6cTGL/yHXs1' 
+#   mail: user2@domain.org
+#
+## The password can be defined explicitely, or only by its hash code. 
+## An htpasswd hash code for a user and a password can be obtaind running: 
+#
+# htpasswd -n user 
+#
+## htpasswd utility is installed in linux with apache2-utils package
+## You will be able to configure this users in `backuppc_server_web_main_user` 
+## and `backuppc_server_web_other_users` of backuppc_client role. 
+
+
+## Apache2 configuration data
+
+## Apache2 parameters
+# Flag, whether to configure apache2 or not 
+backuppc_srv_configure_apache: true
+
+# Flag to disable the default Apache2 VirtualHost (apache site)
+backuppc_srv_disable_apache_default_site: true
+
+# e-mail configured in Apache2 VirtualHosts
+backuppc_srv_apache_email: 'webmaster@{{ ansible_fqdn }}'
+
+# Flag to force https to access /backuppc CGI alias
+backuppc_srv_apache_require_ssl: true
+
+# Configuration of SSLCertificateFile and SSLCertificateKeyFile for Certbot generated certificates
+
+# Flag as option automatically congfigure Certbot certificates or self-signed snakeoil pre-installed certs  
+backuppc_srv_apache_ssl_certbot: false
+# if you use certbot to generate SSL certificates for Apache2 (eventually with an appropriate Ansible role) put this flag to true. 
+# if you want to use Apache2 with pre-generated snakeoil certificates, let it as false 
+
+# Previous flag defines the following variables for Apache configuration of ssl certificates
+# You can overwrithe these variables with custom values, in which case porevious flag will be unuseful
+backuppc_srv_apache_ssl_cert_file: "{{ '/etc/letsencrypt/live/' ~ backuppc_srv_server_name ~ '/cert.pem' if backuppc_srv_apache_ssl_certbot else '/etc/ssl/certs/ssl-cert-snakeoil.pem' }}"
+backuppc_srv_apache_ssl_cert_key_file: "{{ '/etc/letsencrypt/live/' ~ backuppc_srv_server_name ~ '/privkey.pem' if backuppc_srv_apache_ssl_certbot else '/etc/ssl/private/ssl-cert-snakeoil.key' }}"
+
+# Access control parameters
+backuppc_srv_apache_access_control: true 
+# backuppc_srv_apache_Require: define this variable as the parameters of a Require Apache2 directive 
+# See: https://httpd.apache.org/docs/2.4/mod/mod_authz_host.html#requiredirectives
+# For instance, to limit the access to your IPv4 and IPv6 network with: 
+# backuppc_srv_apache_Require: "ip 172.30 2001:db8:3::/48"
+
+...

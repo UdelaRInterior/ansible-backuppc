@@ -1,0 +1,13 @@
+---
+# backuppc_server role's variables 
+
+backuppc_srv_packages:
+- backuppc
+- fcgiwrap
+- libfile-rsyncp-perl
+- ohai
+- python-passlib
+- rsync
+- ssl-cert
+
+...

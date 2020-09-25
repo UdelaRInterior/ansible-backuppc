@@ -12,12 +12,12 @@
     - name: reload nginx
       service: name=nginx state=reloaded
   vars:
-    backuppc_fetch_ssh_key: true
-    backuppc_RsyncClientCmd: '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
-    backuppc_RsyncClientRestoreCmd: '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
-    backuppc_BackupFilesExclude:
+    backuppc_srv_fetch_ssh_key: true
+    backuppc_srv_RsyncClientCmd: '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
+    backuppc_srv_RsyncClientRestoreCmd: '$sshPath -q -x -l backuppc $host sudo $rsyncPath $argList+'
+    backuppc_srv_BackupFilesExclude:
       - /proc
-    backuppc_hosts:
+    backuppc_srv_hosts:
       - hostname: 192.168.65.92
         state: present
         include_files:
